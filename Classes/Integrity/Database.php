@@ -106,7 +106,7 @@ class Database implements SingletonInterface
         return $rows;
     }
 
-    public function getNonContainerChildrenPerColPos(array $containerUsedColPosArray, ?int $pid = null): array
+    public function getNonContainerChildrenPerColPos(array $containerUsedColPosArray, ?int $pid = null, ?int $languageId = null): array
     {
         $queryBuilder = $this->getQueryBuilder();
         $stm = $queryBuilder
@@ -116,12 +116,18 @@ class Database implements SingletonInterface
                 $queryBuilder->expr()->notIn(
                     'colPos',
                     $queryBuilder->createNamedParameter($containerUsedColPosArray, Connection::PARAM_INT_ARRAY)
-                ),
-                $queryBuilder->expr()->eq(
-                    'sys_language_uid',
-                    $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
                 )
             );
+
+        if (!is_null($languageId)) {
+            $stm->andWhere(
+                $queryBuilder->expr()->eq(
+                    'sys_language_uid',
+                    $queryBuilder->createNamedParameter($languageId, Connection::PARAM_INT)
+                )
+            );
+        }
+
         if (!empty($pid)) {
             $stm->andWhere(
                 $queryBuilder->expr()->eq(
@@ -136,7 +142,7 @@ class Database implements SingletonInterface
         $results = $stm->executeQuery()->fetchAllAssociative();
         $rows = [];
         foreach ($results as $result) {
-            $key = $result['pid'] . '-' . $result['colPos'];
+            $key = $result['pid'] . '-' . $result['sys_language_uid'] . '-' . $result['colPos'];
             if (!isset($rows[$key])) {
                 $rows[$key] = [];
             }
@@ -161,6 +167,7 @@ class Database implements SingletonInterface
                     $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
                 )
             );
+
         if (!empty($pid)) {
             $stm->andWhere(
                 $queryBuilder->expr()->eq(
@@ -177,7 +184,7 @@ class Database implements SingletonInterface
         return $rows;
     }
 
-    public function getContainerRecordsFreeMode(array $cTypes, ?int $pid = null): array
+    public function getContainerRecordsFreeMode(array $cTypes, ?int $pid = null, ?int $languageId = null): array
     {
         $queryBuilder = $this->getQueryBuilder();
         $stm = $queryBuilder
@@ -188,15 +195,21 @@ class Database implements SingletonInterface
                     'CType',
                     $queryBuilder->createNamedParameter($cTypes, Connection::PARAM_STR_ARRAY)
                 ),
-                $queryBuilder->expr()->neq(
-                    'sys_language_uid',
-                    $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
-                ),
                 $queryBuilder->expr()->eq(
                     'l18n_parent',
                     $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
                 )
             );
+
+        if (!is_null($languageId)) {
+            $stm->andWhere(
+                $queryBuilder->expr()->eq(
+                    'sys_language_uid',
+                    $queryBuilder->createNamedParameter($languageId, Connection::PARAM_INT)
+                )
+            );
+        }
+
         if (!empty($pid)) {
             $stm->andWhere(
                 $queryBuilder->expr()->eq(

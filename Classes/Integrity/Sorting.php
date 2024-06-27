@@ -53,11 +53,11 @@ class Sorting implements SingletonInterface
         $this->containerService = $containerService;
     }
 
-    public function run(bool $dryRun = true, bool $enableLogging = false, ?int $pid = null): array
+    public function run(bool $dryRun = true, bool $enableLogging = false, ?int $pid = null, ?int $languageId = null): array
     {
         $cTypes = $this->tcaRegistry->getRegisteredCTypes();
         $containerRecords = $this->database->getContainerRecords($cTypes, $pid);
-        $containerRecords = array_merge($containerRecords, $this->database->getContainerRecordsFreeMode($cTypes, $pid));
+        $containerRecords = array_merge($containerRecords, $this->database->getContainerRecordsFreeMode($cTypes, $pid, $languageId));
         $colPosByCType = [];
         foreach ($cTypes as $cType) {
             $columns = $this->tcaRegistry->getAvailableColumns($cType);
